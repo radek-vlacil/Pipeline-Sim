@@ -1,26 +1,29 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class StatusProcessor<T> : Processor<T>
     {
         private readonly List<(Time, int)> _configuration;
 
-        public StatusProcessor(string name, List<(Time, int)> configuration, IClock clock)
-            : base(name, clock)
+        public StatusProcessor(string name, List<(Time, int)> configuration, IClock clock, IMeterFactory factory)
+            : base(name, clock, factory)
         {
             _configuration = configuration;
             _configuration.Reverse();
         }
 
-        public StatusProcessor(string name, int failureRate, IClock clock)
-            : this(name, [(Time.Min, failureRate)], clock)
+        public StatusProcessor(string name, int failureRate, IClock clock, IMeterFactory factory)
+            : this(name, [(Time.Min, failureRate)], clock, factory)
         {
         }
 
-        public StatusProcessor(string name, Result result, IClock clock)
+        public StatusProcessor(string name, Result result, IClock clock, IMeterFactory factory)
             : this(
                   name,
                   [(Time.Min, result == Result.Failure ? 100 : 0)],
-                  clock)
+                  clock,
+                  factory)
         {
         }
 

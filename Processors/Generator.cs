@@ -1,12 +1,14 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class Generator<T> : Processor<T>
     {
         private readonly int _requests;
         private readonly IProcessor<T> _processor;
 
-        public Generator(string name, int requests, IProcessor<T> processor, IClock clock)
-            : base(name, clock)
+        public Generator(string name, int requests, IProcessor<T> processor, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _requests = requests;
             _processor = processor;

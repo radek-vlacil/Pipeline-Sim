@@ -1,43 +1,27 @@
-﻿namespace TrafficSim
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim
 {
     internal abstract class Processor<T> : IProcessor<T>
     {
-        private int _requestActive;
-        private int _requestNew;
-        private int _requestDone;
-        private int _requestFailed;
-        private int _requestSuccessful;
-        private List<int> _latencies;
+        private readonly UpDownCounter<int> _requestActive;
+        private readonly Counter<int> _requestNew;
+        private readonly Counter<int> _requestDone;
+        private readonly Histogram<int> _latencies;
 
         protected IClock Clock { get; init; }
 
         public string Name { get; init; }
 
-        protected Processor(string name, IClock clock)
+        protected Processor(string name, IClock clock, IMeterFactory factory)
         {
             Name = name;
-            _requestActive = 0;
-            _requestNew = 0;
-            _requestDone = 0;
-            _requestFailed = 0;
-            _requestSuccessful = 0;
-            _latencies = [];
+            var meter = factory.Create(name); 
+            _requestActive = meter.CreateUpDownCounter<int>("active");
+            _requestNew = meter.CreateCounter<int>("new");
+            _requestDone = meter.CreateCounter<int>("done");
+            _latencies = meter.CreateHistogram<int>("latencies");
             Clock = clock;
-        }
-
-        public void DumpStats(StreamWriter output)
-        {
-            var average = _latencies.Count > 0 ? _latencies.Average() : 0;
-            var max = _latencies.Count > 0 ? _latencies.Max() : 0;
-
-            output.WriteLineAsync($"{Clock.Now},{Name},{_requestActive},{_requestNew},{_requestDone},{_requestFailed},{_requestSuccessful},{average},{max}");
-            output.Flush();
-            ResetStats();
-        }
-
-        public void PrintTitle(StreamWriter output)
-        {
-            output.WriteLineAsync("Time, Name, Active, New, Done, Failed, Successful, LatencyAvg, LatencyMax");
         }
 
         public async Task<Result> ProcessAsync(T args)
@@ -47,7 +31,7 @@
             var startTime = Clock.Now;
             var result = await HandleProcessAsync(args);
 
-            RequestDone(result, startTime);
+            RequestDone(result, startTime, args);
 
             return result;
         }
@@ -56,32 +40,17 @@
 
         private void NewRequest()
         {
-            _requestActive++;
-            _requestNew++;
+            _requestActive.Add(1);
+            _requestNew.Add(1);
         }
 
-        protected void RequestDone(Result result, Time startTime)
+        protected void RequestDone(Result result, Time startTime, T args)
         {
-            _requestActive--;
-            _requestDone++;
-            _latencies.Add(Clock.Now - startTime);
-            if (result == Result.Success)
-            {
-                _requestSuccessful++;
-            }
-            else
-            {
-                _requestFailed++;
-            }
-        }
-
-        private void ResetStats()
-        {
-            _requestNew = 0;
-            _requestDone = 0;
-            _requestFailed = 0;
-            _requestSuccessful = 0;
-            _latencies = [];
+            _requestActive.Add(-1);
+            _requestDone.Add(1);
+            _latencies.Record(Clock.Now - startTime,
+                new KeyValuePair<string, object?>("args", args?.ToString() ?? "<null>"),
+                new KeyValuePair<string, object?>("result", result.ToString()));
         }
     }
 }

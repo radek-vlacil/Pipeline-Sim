@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +18,9 @@ namespace TrafficSim.Processors
             (549,37278,"Keep"),
             (10161,37278,"Drop"),
             (26568,37278,"Delay"),
-            (555,36527,"keep"),
-            (26378,36527,"delay"),
-            (9594,36527,"drop"),
+            (555,36527,"Keep"),
+            (26378,36527,"Delay"),
+            (9594,36527,"Drop"),
             (494,36794,"Keep"),
             (9559,36794,"Drop"),
             (26741,36794,"Delay"),
@@ -1813,44 +1814,56 @@ namespace TrafficSim.Processors
             (11707,39797,"Drop")
         ];
 
-        private const int _ratio = 10000;
+        private const int _percentageDecimals = 10000;
+        private const int _requestCountNormalization = 100;
 
         private class Container
         {
-            private class Member(int value, string name, int percentage)
+            public class Member(int value, string name, int percentage)
             {
                 public int Value { get; set; } = value;
                 public string Name { get; set; } = name;
                 public int Percentage { get; set; } = percentage;
             }
 
-            private int _total = 0;
+            public int Total { get; private set; }
+
             private readonly List<Member> _values = new List<Member>();            
 
             public void Add(int value, string name)
             {
-                _total += value;
+                Total += value;
                 _values.Add(new Member(value, name, 0));
 
                 var interval = 0;
                 foreach (var item in _values)
                 {
-                    var percentage = (int) (((double) item.Value) / _total * _ratio);
+                    var percentage = (int) (((double) item.Value) / Total * _percentageDecimals);
                     interval += percentage;
                     item.Percentage = interval;
                 }
             }
+
+            public Member GetMember(int randomThrow)
+            {
+                foreach (var item in _values)
+                {
+                    if (randomThrow < item.Percentage)
+                    {
+                        return item;
+                    }
+                }
+
+                return _values[_values.Count - 1];
+            }
         }
 
         private readonly List<Container> _containers = new List<Container>();
-        private readonly int _rps = 0;
 
-
-        public PeakGenerator(string name, int rps, IProcessor<string> processor, IClock clock)
-            : base(name, clock)
+        public PeakGenerator(string name, IProcessor<string> processor, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _processor = processor;
-            _rps = rps;
             var containersIndex = 0;
 
             for (var i = 0; i < _data.Count; )
@@ -1868,12 +1881,17 @@ namespace TrafficSim.Processors
         public void Generate()
         {
             var r = new Random(0);
-            var t = Clock.Now;
+            var t = Clock.Now < _containers.Count ? Clock.Now : _containers.Count - 1;
             var c = _containers[t];
 
-            for (var i = 0; i < _rps; i++)
+            var requestCount = c.Total / _requestCountNormalization;
+
+            for (var i = 0; i < requestCount; i++)
             {
-                ProcessAsync("args");
+                var p = r.Next(0, _percentageDecimals);
+                var member = c.GetMember(p);
+
+                var _ = ProcessAsync(member.Name);
             }
         }
 

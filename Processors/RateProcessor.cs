@@ -1,4 +1,6 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class RateProcessor<T> : Processor<T>
     {
@@ -7,8 +9,8 @@
         private int t = 0;
         private int bucket = 0;
 
-        public RateProcessor(string name, int rate, IProcessor<T> processor, IClock clock)
-            : base(name, clock)
+        public RateProcessor(string name, int rate, IProcessor<T> processor, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _processor = processor;
             _rate = rate;

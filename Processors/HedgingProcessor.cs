@@ -1,4 +1,6 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class HedgingProcessor<T> : Processor<T>
     {
@@ -12,8 +14,8 @@
             public bool Done { get; set; }
         }
 
-        public HedgingProcessor(string name, int hedgeDelay, IProcessor<T> primary, IProcessor<T> secondary, IClock clock, ITaskQueue queue)
-            : base(name, clock)
+        public HedgingProcessor(string name, int hedgeDelay, IProcessor<T> primary, IProcessor<T> secondary, IClock clock, ITaskQueue queue, IMeterFactory f)
+            : base(name, clock, f)
         {
             _hedgeDelay = hedgeDelay;
             _primary = primary;

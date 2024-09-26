@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics.Metrics;
+
 namespace TrafficSim.Processors
 {
     internal class RetryProcessor<T> : Processor<T>
@@ -8,8 +10,8 @@ namespace TrafficSim.Processors
         private readonly int _initialDelay;
         private readonly ITaskQueue _taskQueue;
 
-        public RetryProcessor(string name, IProcessor<T> processor, int maxRetries, int initialDelay, IClock clock, ITaskQueue taskQueue)
-            : base(name, clock)
+        public RetryProcessor(string name, IProcessor<T> processor, int maxRetries, int initialDelay, IClock clock, ITaskQueue taskQueue, IMeterFactory f)
+            : base(name, clock, f)
         {
             _processor = processor;
             _maxTries = maxRetries + 1;

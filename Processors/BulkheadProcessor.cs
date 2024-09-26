@@ -1,4 +1,6 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class BulkheadProcessor<T> : Processor<T>
     {
@@ -7,8 +9,8 @@
         private readonly IProcessor<T> _processor;
         private readonly SemaphoreSlim _semaphore;
 
-        public BulkheadProcessor(string name, int maxConcurrent, int maxQueued, IProcessor<T> processor, IClock clock)
-            : base(name, clock)
+        public BulkheadProcessor(string name, int maxConcurrent, int maxQueued, IProcessor<T> processor, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _maxQueued = maxQueued;
             _processor = processor;

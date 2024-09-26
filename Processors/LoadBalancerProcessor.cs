@@ -1,12 +1,14 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class LoadBalancerProcessor<T> : Processor<T>
     {
         private readonly List<IProcessor<T>> _processors;
         private int _index;
 
-        public LoadBalancerProcessor(string name, List<IProcessor<T>> processors, IClock clock)
-            : base(name, clock)
+        public LoadBalancerProcessor(string name, List<IProcessor<T>> processors, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _processors = processors;
             _index = 0;

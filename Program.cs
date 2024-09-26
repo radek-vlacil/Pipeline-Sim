@@ -1,5 +1,10 @@
-﻿using TrafficSim.Printer;
-using TrafficSim.Processors;
+﻿using TrafficSim.Processors;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Prometheus;
+using System.Diagnostics.Metrics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace TrafficSim
 {
@@ -7,10 +12,25 @@ namespace TrafficSim
     {
         static void Main(string[] args)
         {
-            var clock = new Clock();
-            var taskQueue = new TaskQueue(clock);
-            SynchronizationContext.SetSynchronizationContext(taskQueue);
-            var step = 1;
+            var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddEndpointsApiExplorer();
+
+            var app = builder.Build();
+
+            app.UseMetricServer();
+
+
+            app.MapGet("/run", async (ILogger<Simulator> log, IMeterFactory f) =>
+            {
+                var sim = new Simulator(log, f);
+                var _ = sim.Run();
+                return Results.Ok();
+            });
+
+            app.Run();
+
+
 
  //           var s1 = new StatusProcessor("Primary.Status", [(0, 0), (20000, 100), (400000, 0)], clock);
  //           var d1 = new DelayProcessor("Primary.Delay", [(0, 150), (20000, 1000), (400000, 150)], s1, clock, taskQueue);
@@ -26,6 +46,7 @@ namespace TrafficSim
 
  //           var h = new HedgingProcessor("Hedging", 500, to1, to2, clock, taskQueue);
 
+            /*
             var s = new StatusProcessor<string>("Status", 0, clock);
             var r = new RateProcessor<string>("Rate", 1, s, clock);
             var g = new PeakGenerator("Generator", 1, r, clock);
@@ -44,6 +65,7 @@ namespace TrafficSim
 
                 clock.Advance(step);
             }
+            */
         }
     }
 }

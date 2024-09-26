@@ -3,9 +3,6 @@
     internal interface IProcessor
     {
         string Name { get; }
-
-        void PrintTitle(StreamWriter output);
-        void DumpStats(StreamWriter output);
     }
 
     internal interface IProcessor<T> : IProcessor

@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics.Metrics;
+
 namespace TrafficSim.Processors
 {
     internal class LinearProcessor<T> : Processor<T>
@@ -6,8 +8,8 @@ namespace TrafficSim.Processors
         private readonly List<IProcessor<T>> _processors;
         private readonly Func<Result, bool> _exitCondition;
 
-        public LinearProcessor(string name, List<IProcessor<T>> processors, Func<Result, bool> exitCondition, IClock clock)
-            : base(name, clock)
+        public LinearProcessor(string name, List<IProcessor<T>> processors, Func<Result, bool> exitCondition, IClock clock, IMeterFactory f)
+            : base(name, clock, f)
         {
             _processors = processors;
             _exitCondition = exitCondition;

@@ -1,4 +1,6 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class DelayProcessor<T> : Processor<T>
     {
@@ -6,8 +8,8 @@
         private readonly IProcessor<T> _processor;
         private readonly ITaskQueue _taskQueue;
 
-        public DelayProcessor(string name, List<(Time, int)> configuration, IProcessor<T> processor, IClock clock, ITaskQueue queue)
-            : base(name, clock)
+        public DelayProcessor(string name, List<(Time, int)> configuration, IProcessor<T> processor, IClock clock, ITaskQueue queue, IMeterFactory f)
+            : base(name, clock, f)
         {
             _configuration = new List<(Time, int)>(configuration);
             _configuration.Reverse();
@@ -15,8 +17,8 @@
             _taskQueue = queue;
         }
 
-        public DelayProcessor(string name, int delay, IProcessor<T> processor, IClock clock, ITaskQueue queue)
-            : this(name, [(Time.Min, delay)], processor, clock, queue)
+        public DelayProcessor(string name, int delay, IProcessor<T> processor, IClock clock, ITaskQueue queue, IMeterFactory f)
+            : this(name, [(Time.Min, delay)], processor, clock, queue, f)
         {
         }
 

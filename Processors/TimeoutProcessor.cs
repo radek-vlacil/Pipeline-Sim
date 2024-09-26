@@ -1,4 +1,6 @@
-﻿namespace TrafficSim.Processors
+﻿using System.Diagnostics.Metrics;
+
+namespace TrafficSim.Processors
 {
     internal class TimeoutProcessor<T> : Processor<T>
     {
@@ -6,8 +8,8 @@
         private readonly int _timeout;
         private readonly IProcessor<T> _processor;
 
-        public TimeoutProcessor(string name, int timeout, IProcessor<T> processor, IClock clock, ITaskQueue taskQueue)
-            : base(name, clock)
+        public TimeoutProcessor(string name, int timeout, IProcessor<T> processor, IClock clock, ITaskQueue taskQueue, IMeterFactory f)
+            : base(name, clock, f)
         {
             _timeout = timeout;
             _taskQueue = taskQueue;

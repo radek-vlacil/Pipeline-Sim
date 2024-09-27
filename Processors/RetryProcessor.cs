@@ -9,14 +9,16 @@ namespace TrafficSim.Processors
         private readonly int _maxTries;
         private readonly int _initialDelay;
         private readonly ITaskQueue _taskQueue;
+        private readonly Func<T, Result, bool> _shouldRetry;
 
-        public RetryProcessor(string name, IProcessor<T> processor, int maxRetries, int initialDelay, IClock clock, ITaskQueue taskQueue, IMeterFactory f)
+        public RetryProcessor(string name, IProcessor<T> processor, int maxRetries, int initialDelay, Func<T, Result, bool> shouldRetry, IClock clock, ITaskQueue taskQueue, IMeterFactory f)
             : base(name, clock, f)
         {
             _processor = processor;
             _maxTries = maxRetries + 1;
             _initialDelay = initialDelay;
             _taskQueue = taskQueue;
+            _shouldRetry = shouldRetry ?? ((i, j) => j != Result.Success);
         }
 
         protected async override Task<Result> HandleProcessAsync(T args)
@@ -27,11 +29,11 @@ namespace TrafficSim.Processors
             {
                 ++tryCount;
                 result = await _processor.ProcessAsync(args);
-                if (result == Result.Success || tryCount >= (_maxTries))
+                if (!_shouldRetry(args, result) || tryCount >= (_maxTries))
                 {
                     return result;
                 }
-                await _taskQueue.EnqueueAsync(GetDelay(tryCount));
+                //await _taskQueue.EnqueueAsync(GetDelay(tryCount));
             }
             return result;
         }

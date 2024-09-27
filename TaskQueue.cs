@@ -5,14 +5,14 @@ namespace TrafficSim
     internal class TaskQueue : SynchronizationContext, ITaskQueue
     {
         private readonly PriorityQueue<Action, int> _timeQueue;
-        private readonly ConcurrentQueue<(SendOrPostCallback, object)> _workQueue;
+        private readonly ConcurrentQueue<(SendOrPostCallback, object?)> _workQueue;
         private readonly IClock _clock;
 
         public TaskQueue(IClock clock)
         {
             _clock = clock;
             _timeQueue = new PriorityQueue<Action, int>();
-             _workQueue = new ConcurrentQueue<(SendOrPostCallback, object)>();
+             _workQueue = new ConcurrentQueue<(SendOrPostCallback, object?)>();
         }
 
         public void Enqueue(int duration, Action action)

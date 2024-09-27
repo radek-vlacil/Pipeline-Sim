@@ -18,7 +18,7 @@ namespace TrafficSim.Processors
         {
             for (var i = 0; i < _requests; i++)
             {
-                ProcessAsync(args);
+                var _ = ProcessAsync(args);
             }
         }
 

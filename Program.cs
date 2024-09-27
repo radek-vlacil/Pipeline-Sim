@@ -21,7 +21,7 @@ namespace TrafficSim
             app.UseMetricServer();
 
 
-            app.MapGet("/run", async (ILogger<Simulator> log, IMeterFactory f) =>
+            app.MapGet("/run", (ILogger<Simulator> log, IMeterFactory f) =>
             {
                 var sim = new Simulator(log, f);
                 var _ = sim.Run();

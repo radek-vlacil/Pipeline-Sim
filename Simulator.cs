@@ -28,14 +28,16 @@ namespace TrafficSim
         public async Task Run()
         {
 
-            var s = new StatusProcessor<string>("Status", 0, _clock, _meterFactory);
-            var r = new RateProcessor<string>("Rate", 500, s, _clock, _meterFactory);
-            var g = new PeakGenerator("Generator", r, _clock, _meterFactory);
-//            var g = new Generator<string>("Generator", 600, r, _clock, _meterFactory);
+            var status = new StatusProcessor<string>("Stats", 0, _clock, _meterFactory);
+            var rate   = new RateProcessor<string>("Rate", 500, status, _clock, _meterFactory);
+            var shaper = new TrafficShaper("Shaper", rate, 10, 100, _clock, _meterFactory);
+            var retry  = new RetryProcessor<string>("Retry", shaper, 1, 100, ((i, j) => i == "Keep" && j != Result.Success), _clock, _taskQueue, _meterFactory);
+            var g      = new PeakGenerator("Generator", retry, _clock, _meterFactory);
+//            var g = new Generator<string>("Generator", 600, shaper, _clock, _meterFactory);
 
             for (int j = 0; j < 1800; ++j)
             {
-                g.Generate();
+                g.Generate("Drop");
 
                 //_taskQueue.Run(_clock.Now);
 

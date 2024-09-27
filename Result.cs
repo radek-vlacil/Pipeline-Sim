@@ -10,6 +10,7 @@ namespace TrafficSim
     {
         Success,
         Throttled,
-        Failure
+        Failure,
+        FailureDropped    
     }
 }

@@ -1878,7 +1878,7 @@ namespace TrafficSim.Processors
             }
         }
 
-        public void Generate()
+        public void Generate(string ignore)
         {
             var r = new Random(0);
             var t = Clock.Now < _containers.Count ? Clock.Now : _containers.Count - 1;

@@ -1815,7 +1815,7 @@ namespace TrafficSim.Processors
         ];
 
         private const int _percentageDecimals = 10000;
-        private const int _requestCountNormalization = 100;
+        private const int _requestCountNormalization = 10;
 
         private class Container
         {

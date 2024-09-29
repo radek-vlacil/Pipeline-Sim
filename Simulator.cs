@@ -16,6 +16,7 @@ namespace TrafficSim
         private readonly Clock _clock;
         private readonly TaskQueue _taskQueue;
         private readonly int _step = 1;
+        private readonly PeriodicTimer _periodicTimer;
 
         public Simulator(ILogger<Simulator> logger, IMeterFactory factory)
         {
@@ -23,29 +24,28 @@ namespace TrafficSim
             _meterFactory = factory;
             _clock = new Clock();
             _taskQueue = new TaskQueue(_clock);
+            _periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         }
 
         public async Task Run()
         {
 
             var status = new StatusProcessor<string>("Stats", 0, _clock, _meterFactory);
-            var rate   = new RateProcessor<string>("Rate", 500, status, _clock, _meterFactory);
+            var rate   = new RateProcessor<string>("Rate", 5000, status, _clock, _meterFactory);
             var shaper = new TrafficShaper("Shaper", rate, 10, 100, _clock, _meterFactory);
-            var retry  = new RetryProcessor<string>("Retry", shaper, 1, 100, ((i, j) => i == "Keep" && j != Result.Success), _clock, _taskQueue, _meterFactory);
+            var retry  = new RetryProcessor<string>("Retry", shaper, 3, 100, ((i, j) => i == "Keep" && j != Result.Success), _clock, _taskQueue, _meterFactory);
             var g      = new PeakGenerator("Generator", retry, _clock, _meterFactory);
 //            var g = new Generator<string>("Generator", 600, shaper, _clock, _meterFactory);
 
-            for (int j = 0; j < 1800; ++j)
+            int i = 0;
+            const int maxPeriods = 1800;
+            while (await _periodicTimer.WaitForNextTickAsync())
             {
+                if (i++ == maxPeriods) return;
                 g.Generate("Drop");
 
-                //_taskQueue.Run(_clock.Now);
-
-                await Task.Delay(100);
                 _clock.Advance(_step);
             }
-
-
         }
 
 
